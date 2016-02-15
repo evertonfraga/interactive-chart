@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Projet mentions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+        
+      }
+    .axis path,
+	.axis line {
+		fill: none;
+		stroke: #000;
+ 	    shape-rendering: crispEdges;	
+ 		stroke-width: 1;
+		}
+
+		.dot {
+		  stroke: #fa9;
+		}
+
+	div.boutons {
+	position: relative;
+	left:600px;
+	top:150px;
+	width:100px;
+	}
+	
+	
+	#viz1 {
+	margin-top:-50px;
+	}
+	
+	div.tooltip {   
+	  position: absolute;           
+	  text-align: center;           
+	  width: 120px;                  
+	  height: 28px;                 
+	  padding: 2px;
+	  margin:40px;             
+	  font: 12px sans-serif;        
+	  background: lightsteelblue;   
+	  border: 0px;      
+	  border-radius: 8px;           
+	  pointer-events: none;         
+	}
+
+    </style>
+    <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="bootstrap/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="bootstrap/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="bootstrap/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="bootstrap/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="bootstrap/ico/apple-touch-icon-57-precomposed.png">
+
+
+
+</style>
+<body>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var n = 200,
+    m = 10,
+    padding = 6;
+    
+var margin = {top: 20, right: 20, bottom: 20, left: 60},
+    width = 800 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+var col= ["rgb(0,0,255)","#9012BF","#eeeeee"],
+    color = function(d){ return col[d]} ;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.log()
+    .range([height, 0]);
+    
+    
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    .tickValues([]);
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+	//.tickValues([200, 500, 1000, 2000, 5000])
+	.tickFormat(function (d) {
+        return y.tickFormat(4,d3.format(",d"))(d)
+});
+
+
+d3.tsv("/data.tsv", function(error, data) {
+  data.forEach(function(d) {
+    d.cy = +d.TOTAL15;
+    d.cx = +d.TB15;
+    d.cz = +d.PROPTB15;
+    d.color= color(d.GAR15);
+    d.cw = d.GAR15;
+  });
+
+  x.domain([0,2.5]);
+  y.domain([200,4800]);
+//  y.domain(d3.extent(data, function(d) { return d.cy; }));
+
+  var force = d3.layout.force()
+      .nodes(data)
+      .size([width, height])
+      .gravity(0)
+      .charge(0)
+      .alpha(10)
+      .friction(.4)
+      .on("tick", tick)
+      .start();
+
+  var div = d3.select("body").append("div")   
+      .attr("class", "tooltip")               
+      .style("opacity", 0);
+      
+  var svg = d3.select("#viz1").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+  svg.append("circle")
+  .attr('r', 20)
+  .attr('cx', 30)
+  .attr('cy', 30);
+
+  // placement des points
+  var circle = svg.selectAll("circle")
+      .data(data)
+      // .attr('stroke', "black")
+      // .attr('stroke-width', 3)
+      .attr('r', 20)
+      .style("fill", 'red')
+      .enter().append("text")
+      .text(function(d) {return d.LABEL;  })
+      .style("text-anchor","middle").style("dominant-baseline","center")
+      .style("font-size", "10px")
+
+
+  var i=0;
+  circle.each(function() {
+  	data[i].width=(-5+this.getBBox().width);
+    data[i].height=(-2+this.getBBox().height);
+    i++;
+  });
+
+  function tick(e) {
+    circle
+        .each(gravity(e.alpha))
+        .each(collide(0.01))
+        .attr("x", function(d) { return d.x; })
+        .attr("y", function(d) { return d.y; });
+  }
+
+  // Move data toward cluster focus.
+  function gravity(alpha) {
+    return function(d) {
+    //	console.log(alpha)
+  	if(alpha>0.08){
+      		d.y += (y(d.cy) - d.y) * alpha;
+      		d.x += (x(d.cx) - d.x) * alpha;
+  	}
+    };
+  }
+
+  // Resolve collisions between data.
+  function collide(alpha) {
+    var quadtree = d3.geom.quadtree(data);
+    return function(d) {
+      var nx1 = d.x - d.width/2,
+          nx2 = d.x + d.width/2,
+          ny1 = d.y - d.height/2,
+          ny2 = d.y + d.height/2;
+      quadtree.visit(function(quad, x1, y1, x2, y2) {
+        if (quad.point && (quad.point !== d)) {
+  	  a = d;
+  	  b = quad.point;
+  	  dx =  (a.x - b.x)
+            dy =  (a.y - b.y)
+            adx = Math.abs(dx)
+            ady = Math.abs(dy)
+            mdx = (a.width + b.width)/2
+            mdy = (a.height + b.height)/2
+            if (adx < mdx  &&  ady < mdy) {          
+              l = Math.sqrt(dx * dx + dy * dy)
+              lx = (adx - mdx) / l * alpha
+              ly = (ady - mdy) / l * alpha
+              dx *= lx
+              dy *= ly
+              a.x -= dx
+              a.y -= dy
+              b.x += dx
+              b.y += dy
+            }
+        }
+        return x1 > nx2
+            || x2 < nx1
+            || y1 > ny2
+            || y2 < ny1;
+      });
+    };
+  }
+
+  // axe des abscisses
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+      .append("text")
+        .attr("class", "label")
+        .attr("x", width)
+        .attr("y", 15)
+        .style("text-anchor", "end")
+        .text("Proportion de mention TB");
+
+  // axe des ordonnées
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Effectif");
+  });
+
+</script>
+
+   <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="http://coulmont.com/bac/">Projet mentions</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="http://coulmont.com/bac/">Home</a></li>
+              <li class="active"><a href="#">Nuage</a></li>
+              <li><a href="http://coulmont.com/">Qui ?</a></li>
+              <li><a href="http://coulmont.com/contact/">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+    <div class="container">
+
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="hero-unit"><h1>Le nuage des prénoms</h1>
+    <div class="row-fluid">
+    <div class="span12">
+    <div id="viz1"></div>
+<p>
+Entre 2012 et 2015 près d'un million et demi de résultats nominatifs au Bac (général et technologique) ont été récupérés. Les données portent sur les candidats ayant obtenu 8 ou plus de moyenne et ayant autorisé la diffusion de leurs résultats. Pour le graphique ci dessous, je n'ai retenu que les prénoms apparaissant plus de 200 fois. L'échelle de l'axe des ordonnées est logarithmique. <a href="http://coulmont.com/blog/2013/07/07/prenoms-mentions-bac-2013/">Informations complémentaires ici</a>.<br>
+Réalisé avec l'aide précieuse d'<a href="http://www.comeetie.fr">Etienne Côme</a>.<br>
+Attention ! Les prénoms bougent tous un peu pour ne pas se superposer. Leur position finale diffère un peu de la position qu'ils auraient si les proportions et les effectifs étaient bien respectés.
+</p>
+</div>
+
+</div>
+
+</div>
+
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="span4">
+          <h2>Sociologie des prénoms</h2>
+           <p><i>Sociologie des prénoms</i>, aux éditions La Découverte, synthétise une trentaine d'années de travaux de sciences sociales sur les prénoms.Ce livre peut vous aider à comprendre pourquoi les «&nbsp;Léa&nbsp;» de maintenant seront, demain, les «&nbsp;Mauricette&nbsp;» d'aujourd'hui</p>
+           <p><a class="btn" href="http://coulmont.com/livres/prenoms/">Sociologie des prénoms &raquo;</a></p>
+        </div>
+        <div class="span4">
+          <h2>Baptiste Coulmont</h2>
+           <p>Baptiste Coulmont est sociologue, maître de conférences à l'université Paris 8 et chercheur au CRESPPA, laboratoire commun à Paris 8 et au CNRS. Il pense que les prénoms peuvent constituer de puissants indicateurs de position sociale.</p>
+          <p><a class="btn" href="http://coulmont.com/">Son site &raquo;</a></p>
+       </div>
+        <div class="span4">
+          <h2>Les données</h2>
+          <p>Les différentes académies publient, chaque année, les résultats nominatifs au bac. Ces données ont été agrégées et anonymisées. Seuls les prénoms apparaissant plus de 40 fois au total en 2012 et 2015 ont été retenus. Seuls les résultats dont la diffusion a été autorisée par les candidats ont été recueillis.</p>
+          <p>Les «&nbsp;profils&nbsp;» ont été établis à partir d'une classification ascendante hiérarchique.</p>
+          <!-- <p><a class="btn" href="#">View details &raquo;</a></p> -->
+        </div>
+      </div>
+
+      <hr>
+
+      <footer>
+        <p>&copy; Baptiste Coulmont 2012-2015</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

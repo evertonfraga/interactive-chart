@@ -1,0 +1,88 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Sputnik</title>
+    <link rel="stylesheet" href="css/foundation.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body class="interview">
+
+    <div class="row">
+      <div class="small-12 small-centered columns hero gradient">
+				<div>
+					<span class="main-title">PROPÓSITO</span>
+					<span class="secondary-title">SPUTNIK</span>
+          <img src="img/chevron.png" alt="" class="chevron">
+	      </div>
+      </div>
+    </div>
+
+    <div class="row question-row">
+      <div class="small-12 medium-8 large-6 small-centered columns">
+        <h1 class="question-title">1</h1>
+  			<h4>O quanto estou vivendo o meu propósito pessoal atualmente?</h4>
+        <div class="slider" data-slider data-initial-start='50' data-end='100' data-name="q1">
+          <span class="slider-handle"  data-slider-handle role="slider" tabindex="1"></span>
+          <span class="slider-fill" data-slider-fill></span>
+          <input type="hidden" name="q1">
+        </div>
+        <span class="slider-label" data-slider-label="q1">50</span>
+      </div>
+    </div>
+
+    <div class="row question-row">
+      <div class="small-12 medium-8 large-6 small-centered columns">
+        <h1 class="question-title">2</h1>
+  			<h4>O quanto a Coca-Cola está vivendo o seu propósito organizacional atualmente?</h4>
+        <div class="slider" data-slider data-initial-start='50' data-end='100' data-name="q2">
+          <span class="slider-handle"  data-slider-handle role="slider" tabindex="1"></span>
+          <span class="slider-fill" data-slider-fill></span>
+          <input type="hidden" name="q1">
+        </div>
+        <span class="slider-label" data-slider-label="q2">50</span>
+      </div>
+    </div>
+
+    <div class="row question-row">
+      <div class="small-12 medium-8 large-6 small-centered columns">
+        <h1 class="question-title">3</h1>
+  			<h4>O quanto meu propósito pessoal está alinhado com o propósito da Coca-Cola?</h4>
+        <div class="slider" data-slider data-initial-start='50' data-end='100' data-name="q3">
+          <span class="slider-handle"  data-slider-handle role="slider" tabindex="1"></span>
+          <span class="slider-fill" data-slider-fill></span>
+          <input type="hidden" name="q1">
+        </div>
+        <span class="slider-label" data-slider-label="q3">50</span>
+      </div>
+    </div>
+
+		<div class="row button-container">
+			<div class="small-12 medium-8 large-6 small-centered columns">
+				<button type="button" class="large alert button btn-gradient">Go!</button>
+			</div>
+		</div>
+
+    <script src="js/vendor/jquery.min.js"></script>
+    <script src="js/vendor/what-input.min.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+      $(function(){
+        
+        $('[data-slider]').on('change.fndtn.slider', function(){
+          var $el = $(this);
+
+          var $targetEl = $('[name=' + $el.data('slider-label') + ']');
+
+          $targetEl.text($el.data('slider-label'));
+        });
+      });
+    </script>
+
+		<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+  </body>
+</html>

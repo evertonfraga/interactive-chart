@@ -1,0 +1,70 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Sputnik</title>
+    <link rel="stylesheet" href="css/foundation.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body class="chart">
+
+    <div id="chart">
+      <div class="axisX">
+        <span>Propósito pessoal</span>
+      </div>
+      <div class="axisY">
+        <span>Propósito organizacional</span>
+      </div>
+      <ul class="dots">
+      </ul>
+    </div>
+
+    <footer class="row gradient">
+      <div class="small-4 columns">
+        <span class="main-title">PROPÓSITO</span>
+      </div>
+      <div class="small-4 columns pull-right">
+				<span class="secondary-title">SPUTNIK</span>
+      </div>
+    </footer>
+
+    <script src="js/vendor/jquery.min.js"></script>
+    <script src="js/vendor/what-input.min.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script src="js/app.js"></script>
+
+		<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+
+    <script>
+      $(function(){
+
+        $.getJSON('chart.json', function(data){
+          var leftPx = function(v){ return (v * 8) + 'px' };
+          var topPx = function(v){ return (v * 6) + 'px' };
+          var backgroundColor = function(v){ return 'rgba(244, 0, 0, ' + v/100 + ')' };
+          var items = [];
+          var $chart = $('#chart ul');
+
+          $.each(data, function(key, val){
+            $('<li />')
+              .data('left', leftPx(val.q1))
+              .data('top', topPx(val.q2))
+              .css('background-color', backgroundColor(val.q3))
+              .appendTo($chart)
+          });
+
+          setTimeout(function(){
+            $chart.find('li').each(function(){
+              var $el = $(this);
+              $el.css('left', $el.data('left'))
+                .css('top', $el.data('top'));
+            });
+          }, 2000);
+        });
+
+      });
+    </script>
+  </body>
+</html>
